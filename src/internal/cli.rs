@@ -1,4 +1,7 @@
-use std::io::{stdin, stdout, Write};
+use std::{
+    io::{stdin, stdout, Write},
+    process,
+};
 
 use colored::Colorize;
 
@@ -37,7 +40,15 @@ pub fn prompt(name: &str, msg: &str) -> String {
 
     stdout().flush().unwrap();
 
-    stdin().read_line(&mut line).expect(msg);
+    stdin().read_line(&mut line).expect("[ERROR] reading line!");
+
+    if line.trim().is_empty() {
+        println!("Invalid input");
+        return prompt(name, msg);
+    } else if line.trim().to_lowercase() == "exit" {
+        println!("Exiting...");
+        process::exit(0);
+    }
 
     return line.trim().to_string();
 }
