@@ -28,9 +28,26 @@ impl<'db> Database<'db> {
 
         let mut map = HashMap::new();
 
+        let mut corrupt_entries: Vec<&str> = vec![];
+
         for line in contents.lines() {
-            let (key, value) = line.split_once(" = ").expect("Database corrupt");
-            map.insert(key.to_owned(), value.to_owned());
+            match line.split_once(" = ") {
+                Some((key, value)) => {
+                    map.insert(key.to_owned(), value.to_owned());
+                }
+                None => corrupt_entries.push(line),
+            }
+        }
+
+        if !corrupt_entries.is_empty() {
+            let len = corrupt_entries.len();
+
+            println!(
+                "Found {} corrupt database {} while restoring from disk\n{}",
+                len,
+                if len == 1 { "entry" } else {"entries"},
+                corrupt_entries.join("\n").red()
+            );
         }
 
         Ok(Database {
@@ -58,6 +75,19 @@ impl<'db> Database<'db> {
     pub fn del(&mut self, key: &str) -> Option<String> {
         self.map.remove(key)
     }
+
+    pub fn show(&mut self) -> String {
+        let mut contents = String::new();
+
+        for (key, value) in &self.map {
+            contents.push_str(key);
+            contents.push_str(" = ");
+            contents.push_str(value);
+            contents.push('\n');
+        }
+
+        contents
+    }
 }
 
 impl<'db> Drop for Database<'db> {
@@ -69,14 +99,7 @@ impl<'db> Drop for Database<'db> {
 }
 
 fn flush_impl(database: &mut Database) -> Result<bool, std::io::Error> {
-    let mut contents = String::new();
-
-    for (key, value) in &database.map {
-        contents.push_str(key);
-        contents.push_str(" = ");
-        contents.push_str(value);
-        contents.push('\n');
-    }
+    let contents = database.show();
 
     fs::write(database.filename, contents)?;
 

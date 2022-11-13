@@ -1,7 +1,4 @@
-use std::{
-    io::{stdin, stdout, Write},
-    process,
-};
+use std::io::{stdin, stdout, Write};
 
 use colored::Colorize;
 
@@ -9,6 +6,8 @@ pub enum Command {
     SET,
     GET,
     DEL,
+    EXIT,
+    SHOW
 }
 
 pub fn parse_command(command: &String) -> Command {
@@ -16,6 +15,8 @@ pub fn parse_command(command: &String) -> Command {
         "SET" => Command::SET,
         "GET" => Command::GET,
         "DEL" => Command::DEL,
+        "EXIT" => Command::EXIT,
+        "SHOW" => Command::SHOW,
         unknown => {
             println!(
                 "Invalid command: {}, exiting...",
@@ -30,7 +31,7 @@ pub fn show_commands() {
     println!(
         "\n{}{}",
         "Available commands: ",
-        "SET | GET | DEL".bold().bright_green()
+        "SET | GET | DEL | SHOW | EXIT".bold().bright_green()
     );
 }
 
@@ -45,9 +46,6 @@ pub fn prompt(name: &str, msg: &str) -> String {
     if line.trim().is_empty() {
         println!("Invalid input");
         return prompt(name, msg);
-    } else if line.trim().to_lowercase() == "exit" {
-        println!("Exiting...");
-        process::exit(0);
     }
 
     return line.trim().to_string();
